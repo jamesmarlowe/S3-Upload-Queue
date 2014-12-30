@@ -4,7 +4,7 @@
 /// \brief Implementation of responder functionality
 //
 
-#include "responder.h"
+#include "worker.h"
 #include <vector>
 #include <thread>
 #include <glog/logging.h>
@@ -54,7 +54,7 @@ static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream)
   return retcode;
 }
 
-CURLcode curl_read(const std::string& url, struct curl_slist *headerlist, void *upload_body, long timeout = 3)
+CURLcode curl_get(const std::string& url, struct curl_slist *headerlist, void *upload_body, long timeout = 3)
 {
     CURLcode code(CURLE_FAILED_INIT);
     CURL* curl = curl_easy_init();
@@ -83,8 +83,32 @@ CURLcode curl_read(const std::string& url, struct curl_slist *headerlist, void *
 }
 
 
+CURLcode curl_upload(const std::string& url, struct curl_slist *headerlist, void *upload_body, long timeout = 3)
 {
+    CURLcode code(CURLE_FAILED_INIT);
+    CURL* curl = curl_easy_init();
 
+    if(curl)
+    {
+        // set options for the request
+        if(CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &data_write))
+        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_READFUNCTION, &read_callback))
+        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L))
+        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
+        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
+        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist))
+        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_READDATA, upload_body))
+        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, url.c_str())))
+        {
+            code = curl_easy_perform(curl);
+        }
+        // get stats on the response
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+        curl_easy_getinfo(curl, CURLINFO_TOTAL_TIME, &response_time);
+        
+        curl_easy_cleanup(curl);
+    }
+    return code;
 }
 
 void upload(S3Upload& req)
@@ -95,26 +119,30 @@ void upload(S3Upload& req)
     struct curl_slist *m_headerlist = NULL;
     const char *post_body = NULL;
     
-    time_t now = time(0);
+    time_t t = time(0);
+    tm now = *gmtime(&t);
+    char tmdescr[200]={0};
+    const char fmt[]="%a, %d %b %Y %X +0000"; 
+    std::string timestr = strftime(tmdescr, sizeof(tmdescr)-1, fmt, &now);
     std::string content_type = "binary/octet-stream";
-    std::string StringToSign = "PUT"+char(10)+char(10)+content_type+char(10)+now+char(10)+req.destination()
+    std::string StringToSign = "PUT"+char(10)+char(10)+content_type+char(10)+timestr+char(10)+req.destination();
 
     unsigned char* digest = HMAC(EVP_sha1(), aws_secret, aws_secret.length(), (unsigned char*)StringToSign, StringToSign.length(), NULL, NULL);    
     
     std::string auth = "AWS "+aws_id+":"+digest;
-    m_headerlist = curl_slist_append(m_headerlist, "Date: " + now);
-    m_headerlist = curl_slist_append(m_headerlist, "Authorization: " + auth);
-    m_headerlist = curl_slist_append(m_headerlist, "content-type: " + content_type);
-    m_headerlist = curl_slist_append(m_headerlist, "Content-MD5: ");
+    m_headerlist = curl_slist_append(m_headerlist, ("Date: " + timestr).c_str());
+    m_headerlist = curl_slist_append(m_headerlist, ("Authorization: " + auth).c_str());
+    m_headerlist = curl_slist_append(m_headerlist, ("content-type: " + content_type).c_str());
+    m_headerlist = curl_slist_append(m_headerlist, ("Content-MD5: ").c_str());
     
     if(req.has_request_url())
     {
         if(CURLE_OK == curl_read(req.destination(), m_headerlist, post_body))
         {
             req.set_success(true);
-            req.set_response_time(std::to_string(response_time));
-            req.set_response_status(std::to_string(response_code));
-            req.set_response_body(response_data);
+            std::cout << std::to_string(response_time) << std::endl;
+            std::cout << std::to_string(response_code) << std::endl;
+            std::cout << response_data) << std::endl;
         }
     }
 
@@ -137,7 +165,7 @@ void responder ()
   {
     socket >> mesg;
     dat.ParseFromString(mesg.last());
-    annotate_request(dat);
+    upload(dat);
     CHECK(dat.has_success() == true) << "Failed to return a response!";
     mesg.clear();
   }

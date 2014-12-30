@@ -6,7 +6,7 @@
 #include <zmq.hpp>
 #include <string>
 #include <iostream>
-#include "url_request.pb.h"
+#include "s3_upload.pb.h"
 
 using namespace std;
 
@@ -22,7 +22,7 @@ int main (int argc, char* argv[])
     if (argc > 1)
         reqs = atoi(argv[1]);
     
-    URLRequest data, data2;
+    S3Upload data, data2;
     data.set_upload_url("http://lorempixel.com/400/200/");
     data.set_destination("http://s3.amazonaws.com/customer_campaigns/iurls/test");
     
