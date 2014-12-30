@@ -6,6 +6,6 @@ message S3Upload {
   optional string content_type     = 2;
   optional string upload_url       = 3;
   optional string upload_content   = 4;
-  optional string success          = 5;
+  optional bool success            = 5;
   
 }

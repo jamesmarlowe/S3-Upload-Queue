@@ -111,27 +111,29 @@ void upload(S3Upload& req)
     tm now = *gmtime(&t);
     char tmdescr[200]={0};
     const char fmt[]="%a, %d %b %Y %X +0000"; 
-    std::string timestr = strftime(tmdescr, sizeof(tmdescr)-1, fmt, &now);
+    long unsigned int timestr = strftime(tmdescr, sizeof(tmdescr)-1, fmt, &now);
     std::string content_type = "binary/octet-stream";
-    std::string StringToSign = "PUT"+char(10)+char(10)+content_type+char(10)+timestr+char(10)+req.destination();
+    std::string StringToSign = "PUT"+char(10)+char(10)+content_type+char(10)+tmdescr+char(10)+req.destination();
 
     unsigned char* digest = HMAC(EVP_sha1(), aws_secret, aws_secret.length(), (unsigned char*)StringToSign, StringToSign.length(), NULL, NULL);    
     
-    std::string auth = "AWS "+aws_id+":"+digest;
-    m_headerlist = curl_slist_append(m_headerlist, ("Date: " + timestr).c_str());
+    std::string auth = "AWS "+aws_id+":";
+    m_headerlist = curl_slist_append(m_headerlist, ("Date: " + tmdescr).c_str());
     m_headerlist = curl_slist_append(m_headerlist, ("Authorization: " + auth).c_str());
     m_headerlist = curl_slist_append(m_headerlist, ("content-type: " + content_type).c_str());
-    m_headerlist = curl_slist_append(m_headerlist, ("Content-MD5: ").c_str());
+    m_headerlist = curl_slist_append(m_headerlist, "Content-MD5: ");
     
-    if(req.has_request_url())
+    if(req.has_upload_url())
+        post_body = req.upload_url()
+    else
+        post_body = req.upload_content()
+    
+    if(CURLE_OK == curl_read(req.destination(), m_headerlist, post_body))
     {
-        if(CURLE_OK == curl_read(req.destination(), m_headerlist, post_body))
-        {
-            req.set_success(true);
-            std::cout << std::to_string(response_time) << std::endl;
-            std::cout << std::to_string(response_code) << std::endl;
-            std::cout << response_data) << std::endl;
-        }
+        req.set_success(true);
+        std::cout << std::to_string(response_time) << std::endl;
+        std::cout << std::to_string(response_code) << std::endl;
+        std::cout << response_data << std::endl;
     }
 
     curl_slist_free_all(m_headerlist); 
