@@ -27,7 +27,7 @@ include_directories(GLOG_INCLUDE_DIRS)
 include_directories(${CMAKE_SOURCE_DIR})
 
 set(pbuf_sources
-    url_request.pb.cc
+    s3_upload.pb.cc
 )
 
 set(router_sources
@@ -52,3 +52,7 @@ add_executable(testclient ${testclient_sources} ${pbuf_sources})
 target_link_libraries(router ${ZMQ_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
 target_link_libraries(worker zmqcpp curl ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
 target_link_libraries(testclient ${ZMQ_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
+
+add_custom_command( OUTPUT s3_upload.pb.cc
+                    COMMAND protoc  ${CMAKE_SOURCE_DIR}/s3_upload.proto --cpp_out=${CMAKE_BINARY_DIR} --proto_path=${CMAKE_SOURCE_DIR}/
+                    DEPENDS ${CMAKE_SOURCE_DIR}/s3_upload.proto)

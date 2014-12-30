@@ -46,14 +46,6 @@ static size_t data_write(char* buf, size_t size, size_t nmemb, void* userp)
     return size*nmemb;
 }
 
-static size_t read_callback(void *ptr, size_t size, size_t nmemb, void *stream)
-{
-
-  size_t retcode = "test";
-
-  return retcode;
-}
-
 CURLcode curl_get(const std::string& url, struct curl_slist *headerlist, void *upload_body, long timeout = 3)
 {
     CURLcode code(CURLE_FAILED_INIT);
@@ -63,12 +55,9 @@ CURLcode curl_get(const std::string& url, struct curl_slist *headerlist, void *u
     {
         // set options for the request
         if(CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &data_write))
-        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_READFUNCTION, &read_callback))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
-        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist))
-        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_READDATA, upload_body))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, url.c_str())))
         {
             code = curl_easy_perform(curl);
@@ -92,7 +81,6 @@ CURLcode curl_upload(const std::string& url, struct curl_slist *headerlist, void
     {
         // set options for the request
         if(CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &data_write))
-        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_READFUNCTION, &read_callback))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
