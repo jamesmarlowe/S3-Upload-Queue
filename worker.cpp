@@ -115,20 +115,20 @@ void upload(S3Upload& req)
     std::string content_type = "binary/octet-stream";
     std::string StringToSign = "PUT"+char(10)+char(10)+content_type+char(10)+tmdescr+char(10)+req.destination();
 
-    unsigned char* digest = HMAC(EVP_sha1(), aws_secret, aws_secret.length(), (unsigned char*)StringToSign, StringToSign.length(), NULL, NULL);    
+    unsigned char* digest = HMAC(EVP_sha1(), aws_secret, aws_secret.length(), StringToSign, StringToSign.length(), NULL, NULL);    
     
     std::string auth = "AWS "+aws_id+":";
-    m_headerlist = curl_slist_append(m_headerlist, ("Date: " + tmdescr).c_str());
+    m_headerlist = curl_slist_append(m_headerlist, "Date: " + tmdescr);
     m_headerlist = curl_slist_append(m_headerlist, ("Authorization: " + auth).c_str());
     m_headerlist = curl_slist_append(m_headerlist, ("content-type: " + content_type).c_str());
     m_headerlist = curl_slist_append(m_headerlist, "Content-MD5: ");
     
     if(req.has_upload_url())
-        post_body = req.upload_url()
+        post_body = req.upload_url();
     else
-        post_body = req.upload_content()
+        post_body = req.upload_content();
     
-    if(CURLE_OK == curl_read(req.destination(), m_headerlist, post_body))
+    if(CURLE_OK == curl_upload(req.destination(), m_headerlist, post_body))
     {
         req.set_success(true);
         std::cout << std::to_string(response_time) << std::endl;
