@@ -50,7 +50,7 @@ add_executable(worker ${worker_sources} ${pbuf_sources})
 add_executable(testclient ${testclient_sources} ${pbuf_sources})
 
 target_link_libraries(router ${ZMQ_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
-target_link_libraries(worker zmqcpp curl ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
+target_link_libraries(worker zmqcpp curl crypto ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
 target_link_libraries(testclient ${ZMQ_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
 
 add_custom_command( OUTPUT s3_upload.pb.cc

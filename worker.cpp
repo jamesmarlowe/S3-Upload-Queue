@@ -72,7 +72,7 @@ CURLcode curl_get(const std::string& url, struct curl_slist *headerlist, void *u
 }
 
 
-CURLcode curl_upload(const std::string& url, struct curl_slist *headerlist, void *upload_body, long timeout = 3)
+CURLcode curl_upload(const std::string& url, struct curl_slist *headerlist, const void *upload_body, long timeout = 3)
 {
     CURLcode code(CURLE_FAILED_INIT);
     CURL* curl = curl_easy_init();
@@ -113,9 +113,18 @@ void upload(S3Upload& req)
     const char fmt[]="Date: %a, %d %b %Y %X +0000"; 
     long unsigned int timestr = strftime(tmdescr, sizeof(tmdescr)-1, fmt, &now);
     std::string content_type = "binary/octet-stream";
-    std::string StringToSign = "PUT"+char(10)+char(10)+content_type+char(10)+tmdescr+char(10)+req.destination();
+    char StringToSign[230];
+    char newline = 10;
+    strcpy(StringToSign,"PUT");
+    strcat(StringToSign, &newline);
+    strcat(StringToSign, &newline);
+    strcat(StringToSign, content_type.c_str());
+    strcat(StringToSign, &newline);
+    strcat(StringToSign, tmdescr);
+    strcat(StringToSign, &newline);
+    strcat(StringToSign, req.destination().c_str());
 
-    unsigned char* digest = HMAC(EVP_sha1(), &aws_secret, aws_secret.length(), (unsigned char*)StringToSign.c_str(), StringToSign.length(), NULL, NULL);    
+    unsigned char* digest = HMAC(EVP_sha1(), &aws_secret, aws_secret.length(), (unsigned char*)StringToSign, (sizeof(StringToSign) / sizeof(StringToSign[0])), NULL, NULL);    
     
     std::string auth = "AWS "+aws_id+":";
     m_headerlist = curl_slist_append(m_headerlist, tmdescr);
