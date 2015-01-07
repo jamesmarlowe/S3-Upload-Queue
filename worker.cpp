@@ -158,7 +158,7 @@ void upload(S3Upload& req)
 
 void responder ()
 {
-  zmqcpp::Socket socket(ZMQ_PULL);
+  zmqcpp::Socket socket(ZMQ_REP);
   zmqcpp::Message mesg;
   S3Upload dat;
   std::string annotated;
