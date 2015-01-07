@@ -46,7 +46,7 @@ static size_t data_write(char* buf, size_t size, size_t nmemb, void* userp)
     return size*nmemb;
 }
 
-CURLcode curl_get(const std::string& url, struct curl_slist *headerlist, void *upload_body, long timeout = 3)
+CURLcode curl_get(const std::string& url, long timeout = 3)
 {
     CURLcode code(CURLE_FAILED_INIT);
     CURL* curl = curl_easy_init();
@@ -132,10 +132,13 @@ void upload(S3Upload& req)
     m_headerlist = curl_slist_append(m_headerlist, ("content-type: " + content_type).c_str());
     m_headerlist = curl_slist_append(m_headerlist, "Content-MD5: ");
     
-    if(req.has_upload_url())
-        post_body = req.upload_url().c_str();
+    if(req.has_upload_url() and (CURLE_OK == curl_get(req.upload_url())))
+        post_body = response_data.c_str();
     else
-        post_body = req.upload_content().c_str();
+        if (req.has_upload_content())
+            post_body = req.upload_content().c_str();
+        else
+            return;
     
     if(CURLE_OK == curl_upload(req.destination(), m_headerlist, post_body))
     {
