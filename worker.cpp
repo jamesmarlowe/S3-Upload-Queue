@@ -95,6 +95,7 @@ CURLcode curl_upload(const std::string& url, struct curl_slist *headerlist, cons
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist))
+        && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_UPLOAD, 1L))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_READDATA, upload_body))
         && CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, url.c_str())))
         {
@@ -150,13 +151,13 @@ void upload(S3Upload& req)
         else
             return;
     
-    if(CURLE_OK == curl_upload(req.destination(), m_headerlist, post_body))
+    if(CURLE_OK == curl_upload("http://s3.amazonaws.com"+req.destination(), m_headerlist, post_body) and response_code==200)
     {
         req.set_success(true);
-        std::cout << std::to_string(response_time) << std::endl;
-        std::cout << std::to_string(response_code) << std::endl;
-        std::cout << response_data << std::endl;
     }
+    std::cout << std::to_string(response_time) << std::endl;
+    std::cout << std::to_string(response_code) << std::endl;
+    std::cout << response_data << std::endl;
 
     curl_slist_free_all(m_headerlist); 
     curl_global_cleanup();

@@ -4,6 +4,8 @@
 /// \brief Implementation of bson for config file reading
 //
 
+#include "config.h"
+
 bson::Document parse_config(const std::string & fname)
 {
   std::ifstream fin(fname.c_str());

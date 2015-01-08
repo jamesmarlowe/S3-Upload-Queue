@@ -24,7 +24,7 @@ int main (int argc, char* argv[])
     
     S3Upload data, data2;
     data.set_upload_url("http://lorempixel.com/400/200/");
-    data.set_destination("http://s3.amazonaws.com/customer_campaigns/iurls/test");
+    data.set_destination("/customer_campaigns/iurls/test");
     
     std::cout << "Sending requests…" << std::endl;
     for (int i=0; i<reqs; i++)
