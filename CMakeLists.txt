@@ -10,6 +10,9 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/modules/")
 #enable c++ 11
 SET(CMAKE_CXX_FLAGS "-std=c++11 -O3 ${CMAKE_CXX_FLAGS}")
 
+#bson
+include_directories(${CMAKE_CURRENT_BINARY_DIR}/bson)
+
 #zeromqness
 find_package(ZMQ REQUIRED)
 include_directories(${ZMQ_INCLUDE_DIRS})
@@ -36,6 +39,7 @@ set(router_sources
 
 set(worker_sources
     worker.cpp
+    config.cpp
     base64.cpp
 )
 
@@ -43,6 +47,7 @@ set ( testclient_sources
       testclient.cpp
 )
 
+add_subdirectory(bson)
 add_subdirectory(zmq)
 
 add_executable(router ${router_sources})
@@ -50,7 +55,7 @@ add_executable(worker ${worker_sources} ${pbuf_sources})
 add_executable(testclient ${testclient_sources} ${pbuf_sources})
 
 target_link_libraries(router ${ZMQ_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
-target_link_libraries(worker zmqcpp curl crypto ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
+target_link_libraries(worker fastbson zmqcpp curl crypto ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
 target_link_libraries(testclient ${ZMQ_LIBRARIES} ${Boost_LIBRARIES} ${PROTOBUF_LIBRARY} ${GLOG_LIBRARIES})
 
 add_custom_command( OUTPUT s3_upload.pb.cc

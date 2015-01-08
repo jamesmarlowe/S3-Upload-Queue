@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     if (std::strcmp(argv[i], "-d") == 0)
       daemonize();
     if (strstr(argv[i],".conf"))
-      config_file = argv[i]
+      config_file = argv[i];
   }
   
   google::SetLogDestination(google::INFO, LOG_DIR.c_str());

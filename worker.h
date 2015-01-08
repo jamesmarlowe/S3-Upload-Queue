@@ -15,6 +15,8 @@
 #include <ctime>
 #include <openssl/hmac.h>
 #include "base64.h"
+#include "bson/json/jsonloader.h"
+#include "config.h"
 #include "s3_upload.pb.h"
 
 const char ROUTER[] = "tcp://localhost:5556";
