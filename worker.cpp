@@ -20,10 +20,13 @@ std::string aws_secret;
 
 int main(int argc, char* argv[])
 {
+  std::string config_file = "";
   for (int i = 1; i < argc; i ++)
   {
     if (std::strcmp(argv[i], "-d") == 0)
       daemonize();
+    if (strstr(argv[i],".conf"))
+      config_file = argv[i]
   }
   
   google::SetLogDestination(google::INFO, LOG_DIR.c_str());
@@ -32,6 +35,13 @@ int main(int argc, char* argv[])
   google::InstallFailureSignalHandler();
   
   google::InstallFailureWriter(*write_stack_trace_to_log);
+  
+  config_file = (config_file=="")?"s3.conf":config_file;
+  bson::Document s3conf = parse_config(config_file);
+  if (s3conf.field_names().count("aws_id"))
+    aws_id = s3conf["aws_id"].data<std::string>();
+  if (s3conf.field_names().count("aws_secret"))
+    aws_secret = s3conf["aws_secret"].data<std::string>();
   
   responder();
   return 0;
@@ -126,7 +136,7 @@ void upload(S3Upload& req)
 
     unsigned char* digest = HMAC(EVP_sha1(), &aws_secret, aws_secret.length(), (unsigned char*)StringToSign, (sizeof(StringToSign) / sizeof(StringToSign[0])), NULL, NULL);
 
-    std::string auth = "AWS "+aws_id+":"+base64_encode(digest);
+    std::string auth = "AWS "+aws_id+":"+base64_encode(digest, 20);
     m_headerlist = curl_slist_append(m_headerlist, tmdescr);
     m_headerlist = curl_slist_append(m_headerlist, ("Authorization: " + auth).c_str());
     m_headerlist = curl_slist_append(m_headerlist, ("content-type: " + content_type).c_str());
