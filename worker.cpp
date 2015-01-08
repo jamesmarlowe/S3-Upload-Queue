@@ -124,9 +124,9 @@ void upload(S3Upload& req)
     strcat(StringToSign, &newline);
     strcat(StringToSign, req.destination().c_str());
 
-    unsigned char* digest = HMAC(EVP_sha1(), &aws_secret, aws_secret.length(), (unsigned char*)StringToSign, (sizeof(StringToSign) / sizeof(StringToSign[0])), NULL, NULL);    
-    
-    std::string auth = "AWS "+aws_id+":";
+    unsigned char* digest = HMAC(EVP_sha1(), &aws_secret, aws_secret.length(), (unsigned char*)StringToSign, (sizeof(StringToSign) / sizeof(StringToSign[0])), NULL, NULL);
+
+    std::string auth = "AWS "+aws_id+":"+base64_encode(digest);
     m_headerlist = curl_slist_append(m_headerlist, tmdescr);
     m_headerlist = curl_slist_append(m_headerlist, ("Authorization: " + auth).c_str());
     m_headerlist = curl_slist_append(m_headerlist, ("content-type: " + content_type).c_str());
@@ -170,6 +170,8 @@ void responder ()
     upload(dat);
     CHECK(dat.has_success() == true) << "Failed to return a response!";
     mesg.clear();
+    dat.SerializeToString(& annotated);
+    socket << zmqcpp::Message(annotated);
   }
   return;
 }

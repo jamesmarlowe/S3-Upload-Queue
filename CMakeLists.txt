@@ -36,7 +36,7 @@ set(router_sources
 
 set(worker_sources
     worker.cpp
-    sha1.cpp
+    base64.cpp
 )
 
 set ( testclient_sources
