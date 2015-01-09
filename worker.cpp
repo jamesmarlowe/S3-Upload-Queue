@@ -121,10 +121,13 @@ void upload(S3Upload& req)
     time_t t = time(0);
     tm now = *gmtime(&t);
     char tmdescr[200]={0};
-    const char fmt[]="Date: %a, %d %b %Y %X +0000"; 
+    const char fmt[]="%a, %d %b %Y %X +0000"; 
     long unsigned int timestr = strftime(tmdescr, sizeof(tmdescr)-1, fmt, &now);
+    char tmhdr[200]={0};
+    strcpy(tmhdr,"Date: ");
+    strcat(tmhdr, tmdescr);
     std::string content_type = "binary/octet-stream";
-    char StringToSign[230];
+    char StringToSign[230]={0};
     char newline = 10;
     strcpy(StringToSign,"PUT");
     strcat(StringToSign, &newline);
@@ -138,7 +141,7 @@ void upload(S3Upload& req)
     unsigned char* digest = HMAC(EVP_sha1(), &aws_secret, aws_secret.length(), (unsigned char*)StringToSign, (sizeof(StringToSign) / sizeof(StringToSign[0])), NULL, NULL);
 
     std::string auth = "AWS "+aws_id+":"+base64_encode(digest, 20);
-    m_headerlist = curl_slist_append(m_headerlist, tmdescr);
+    m_headerlist = curl_slist_append(m_headerlist, tmhdr);
     m_headerlist = curl_slist_append(m_headerlist, ("Authorization: " + auth).c_str());
     m_headerlist = curl_slist_append(m_headerlist, ("content-type: " + content_type).c_str());
     m_headerlist = curl_slist_append(m_headerlist, "Content-MD5: ");
